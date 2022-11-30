@@ -1,25 +1,55 @@
-import logo from './logo.svg';
-import './App.css';
+import Header from "./components/Header"
+import { Form, Formik } from "formik"
+import Input from "./components/Input"
+import Main from "./components/Main"
+import { useState } from "react"
+import Images from "./components/Images"
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const validate = (values) => {
+  const errors = {}
+
+  if(!values.search) {
+    errors.search = 'Write something !'
+  }
+
+  return errors
 }
 
-export default App;
+const App = () => {
+  const [state, setState] = useState([])
+  const open = url => window.open(url)
+  return (
+    <>
+      <Header>
+        <Formik
+          initialValues={{search: ''}}
+          validate={validate}
+          onSubmit={async (values) => {
+            document.getElementById('search').disabled = true
+            fetch(`https://api.unsplash.com/search/photos?per_page=20&query=${values.search}`, {
+              headers: {
+                'Authorization': `Client-ID ${process.env.REACT_APP_KEY}`
+              }  
+            })
+              .then(response => response.json())
+              .then(async data => {
+                setState(data.results)
+                document.getElementById('search').disabled = false
+              })
+          }}
+        >
+          
+            <Form>
+              <Input id="search" type="text" name="search" placeholder="What are u looking for?"/>
+            </Form>
+          
+        </Formik>
+      </Header>
+      <Main>
+        <Images data={state} open={open} />
+      </Main>
+    </>
+  )
+}
+
+export default App
